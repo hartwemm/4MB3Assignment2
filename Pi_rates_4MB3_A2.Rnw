@@ -3,6 +3,8 @@
 \input{4mbapreamble}
 \input{4mba2q}
 
+\usepackage{tikz} % Library for nice graphs
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FANCY HEADER AND FOOTER STUFF %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -232,18 +234,21 @@ p <- draw.soln(ic=c(S=S0,I=I0,R=R0), tmax=tmax,
 
   {\color{blue} \begin{proof}[Solution]
   Using the code written in part (b) we will make several calls to these functions to plot a series of curves with different $\R_0$ values.
-<< Q3c, fig=TRUE, hieght=4,width=6,fig.show="hold",dev="tikz">>=
+<< Q3c, fig=TRUE, hieght=4,width=6,fig.show="hold",dev='tikz'>>=
 tmax <- 40 # end time for numerical integration of the ODE
 ## initial conditions:
 I0 <- 0.001
-S0 <- 1 - I0
 R0 <-  0
+S0 <- 1 - I0- R0
+# Parameters:
 gamma_inv=4
 Rknot_vals <- c(1.2,1.5,1.8,2,3,4)
 ## draw box for plot:
 plot(0,0,xlim=c(0,tmax),ylim=c(0,0.5),
-     type="n",xlab="Time (t)",
-     ylab="Prevalence (I)",las=1)
+     type="n",las=1,
+     xlab="Time (t)",
+     ylab="Prevalence (I)",
+     main="SIR curves with varied $\\mathcal{R}_0$ Values")
 ## draw solution for each value of Rknot:
 for (i in 1:length(Rknot_vals)) {
   draw.soln(ic=c(S=S0,I=I0,R=R0), tmax=tmax,
@@ -254,11 +259,10 @@ for (i in 1:length(Rknot_vals)) {
             # use a different line colour for each solution
             )
 }
-legend("topright",legend=Rknot_vals,
+legend("topright",legend=Rknot_vals,title="\\R_0",
        col=rainbow(length(Rknot_vals)+1),lwd=2)
-title(paste("SIR curves with varied","$R_0$","Values"))
+# title(paste("SIR curves with varied","$R_0$","Values"))
 @
-  {\color{magenta}\dots beautifully clear text and plot(s) here \dots\ preceded by \Rlogo code if this is a \texttt{knitr} script}
   \end{proof}
   }
   
@@ -274,9 +278,13 @@ title(paste("SIR curves with varied","$R_0$","Values"))
 \section{Executive summary for the Public Health Agency}
 
 \ExecSumm
-
-  {\color{blue} \begin{proof}[Solution]
-  {\color{magenta}\dots beautifully clear executive summary here, on its own page\dots}
+\pagebreak
+  {\color{blue} \begin{proof}[Solution] 
+After analyzing the $1918$ Philidelphia P\&I time series our group gained information about the epidemic from mathematical modeling and simulation of events. Two very important parameters for determining how the diseases were spread are the mean infectious period and the basic reproduction number, but other inferences can be made from mathematical analysis. \par
+  The mean infectious period from trial-and-error calculation with our mathematical model appeared to be 4 days. This means that on average, a person will be infected for 4 days, and during this time they are able to spread the diseases to other individuals. Having this information is critical for preparing for potential future epidemics that may arise, since necessary precautions can be taken while it is known that someone is still infected. \par
+  A second important parameter that was analyzed and found using mathematical modeling from our group was the basic reproduction number. This parameter is the product of the previously mentioned mean infectious period, as well as the transmission rate. During our analysis, our group concluded that the basic reproduction number for the 1918 Philadelphia P\&I time series was 1.97. The importance of knowing this number is very high because this number tells us the average number of secondary cases of the infection caused by a primary case; primary case meaning someone that is already infected. Since we found this number to be above 1 that means that when someone is infected, they are guaranteed to spread it to other individuals, possibly causing an epidemic. Once again, having this information is crucial for preparation for potential future outbreaks of the diseases.\par
+  Finally, inference can be made about the overall processes that our model used to accurately predict the data from the P\&I time series. Without going into too much detail, in summary interactions between those that were infected and those that were susceptible were what caused the increase in prevalence of infections. After some time, a maximum proportion of the population was achieved, which is based on the basic reproduction number. After the maximum, those that were infected either recovered or passed away, and the proportion of the total population that was infected approached zero. \par
+  If you choose to fund our group full time for a month of research we will be investigating other epidemics of pneumonia and influenza to fit mathematical models that allow us to make predictions about future epidemics. Having information on epidemics from other areas of the world would provide great insight into whether location, culture or a number of other factors affects spread of the disease.
   \end{proof}
   }
 

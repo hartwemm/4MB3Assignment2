@@ -49,6 +49,7 @@ draw.soln(ic=c(S=S0,I=I0,R=R0), tmax=tmax,
 
 
 # Part c
+tikz("Q3Partc.tex")
 tmax <- 40 # end time for numerical integration of the ODE
 ## initial conditions:
 I0 <- 0.001
@@ -58,7 +59,10 @@ gamma_inv=4
 Rknot_vals <- c(1.2,1.5,1.8,2,3,4)
 ## draw box for plot:
 plot(0,0,xlim=c(0,tmax),ylim=c(0,0.5),
-     type="n",xlab="Time (t) in days",ylab="Prevalence (I)",las=1)
+     type="n",las=1,
+     xlab="Time (t)",
+     ylab="Prevalence (I)",
+     main="SIR curves with varied $\\R_0$ Values")
 ## draw solution for each value of Rknot:
 for (i in 1:length(Rknot_vals)) {
   draw.soln(ic=c(S=S0,I=I0,R=R0), tmax=tmax,
@@ -69,7 +73,7 @@ for (i in 1:length(Rknot_vals)) {
   )
 }
 legend("topright",legend=Rknot_vals,col=rainbow(length(Rknot_vals)+1),lwd=2)
-
+dev.off()
 
 ## Part d
 tmax <- 122 # end time for numerical integration of the ODE
@@ -79,10 +83,10 @@ y1 <- data.frame(time=philadata$t,y=philadata$pim)
 pop=c(900,2000,2500,3000,5000)
 for (p in 1:length(pop)) {
   ## initial conditions:
-  I0 <- 0.00002
-  S0 <- 1 - I0
+  I0 <- 0.00006
   R0 <-  0.1
-  plot(philadata$t,philadata$pim/5100,pch=20,col="blue",cex=1.2)
+  S0 <- 1 - I0 - R0
+  plot(philadata$t,philadata$pim/7500,pch=20,col="blue",cex=1.2)
   gamma_inv <- 4
   Rknot_vals <- c(1.97,2,2.01,2.03,2.05)
   ## draw solution for each value of Rknot:
@@ -103,5 +107,3 @@ for (p in 1:length(pop)) {
   legend("topright",legend=Rknot_vals,col=rainbow(length(Rknot_vals)+1),lwd=2)
   title(paste("Population of",pop[p]))
 }
-
-plot(NULL)
