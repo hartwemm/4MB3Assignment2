@@ -27,14 +27,14 @@
 \smallskip
 2018 ASSIGNMENT 2}\\
 \medskip
-\underline{\emph{Group Name}}: \texttt{{\color{blue}Cream}}\\
+\underline{\emph{Group Name}}: \texttt{{\color{blue} $\pi$rates}}\\
 \medskip
-\underline{\emph{Group Members}}: {\color{blue}Eric Clapton, Ginger Baker, Jack Bruce}
+\underline{\emph{Group Members}}: {\color{blue} Megan Hartwell, Ahmad Mahmood, Bradley Montgomery, Courtney Mulholland}
 \end{center}
 
 \bigskip
 \noindent
-This assignment was due in class on \textcolor{red}{\bf Monday 5 February 2018 at 11:30am}.
+This assignment is due in class on \textcolor{red}{\bf Monday 5 February 2018 at 11:30am}.
 
 \section{Plot P\&I mortality in Philadelphia in 1918}
 
@@ -52,9 +52,17 @@ philadata$date <- as.Date(philadata$date)
 
 \item \PhilaDataReproduceA
 
-  {\color{blue} \begin{proof}[Solution]
-  {\color{magenta}\dots beautiful graph here\dots\ and nicely commented code that produces it, either in a separate \texttt{.R} file or preceding the graph if this is a \texttt{knitr} script\dots}
-  \end{proof}
+  {\color{blue}
+<<Q1, eval=TRUE, fig=TRUE, fig.show="hold", width = 6, height = 4>>=
+
+plot(philadata, pch=21, col="grey", type="l",bty="L",
+     ann=FALSE,las=1,xaxs="i") ## Plot underlying grey line
+points(philadata, pch=21, bg="red",cex=0.65,lwd=0.45) ## Add red pts
+## Add blue labels
+mtext("Date", side=1, adj=1, line=1.5, font=1, cex=1.5, col='blue')  
+mtext("P&I Deaths", side=2, padj=-7.0, line=-3.2, font=1, 
+      las=1, cex=1.5, col='blue')
+@
   }
 
 \PhilaDataReproduceB
@@ -163,13 +171,93 @@ for (i in 1:length(betavals)) {
   \end{itemize}
  
  {\color{blue} \begin{proof}[Solution]
- {\color{magenta}\dots If this is a \texttt{knitr} script then your code should be displayed here.  Otherwise, you should state here the name of the file where the \Rlogo code is, and the names of any functions you defined\dots}
+ \begin{itemize}
+ \smallskip
+ \item We first wrote the following code to represent the ODE as a vector field that \Rlogo can integrate numerically. We've chosen to use the parameters $\gamma$ and $\beta$.
+<<Q3b1>>=
+SIR.vector.field <- function(t, vars, parms=c(beta=2,gamma=1)) {
+  # Writes vector field of these differential equations
+  with(as.list(c(parms, vars)), {
+    dS <- -1*beta*S*I # dS/dt
+    dI <- beta*S*I-gamma*I  # dI/dt
+    dR <- gamma*I  # dR/dt
+    vec.fld <- c(dS=dS, dI=dI, dR=dR)
+    return(list(vec.fld)) # ode() requires a list
+  })
+}
+@
+\item To tell \Rlogo that we want to solve this differential equation we need to tell it to integrate the equations above using the parameters we give it, from the initial conditions we specify. The chunk of code below takes the parameters, $\R_0$ and $\frac{1}{\gamma}$, and calculates the parameters $\beta$ and $\gamma$ and uses them to solve the ODE, starting from the initial conditions, \code{ic} that we give, using the time points \code{times}. We then add this solution to the current plot using the \code{lines} command.
+<<Q3b2>>=
+draw.soln <- function(ic=c(S=0.999,I=0.001,R=0), tmax=1, 
+                      times=seq(0,tmax,length.out = 500), 
+                      func, parms=c(R_0=2,gamma_inv=1), 
+                      colour="blue", ... ) {
+  # Solve ode from vector field using deSolve package and 
+  # initial condition and parameters given
+  with(as.list(parms),{
+    gamma=1/gamma_inv
+    beta=gamma*R_0
+    soln <- ode(y=ic, times=times, func, 
+                parms=c(beta=beta,gamma=gamma)) # Solve the ode 
+    lines(times, soln[,"I"], 
+          col=colour, ... ) # Add this line to our plot
+    return(data.frame(time=times,y=soln[,"I"]))
+  })
+}
+@
+\item Finally we use these two functions to solve the differential equations with our parameters and initial conditions.
+<<Q3b3,fig=TRUE,height=4,width=4>>=
+tmax <- 10 # end time for numerical integration of the ODE
+## draw box for plot:
+plot(0,0,xlim=c(0,tmax),ylim=c(0,1),
+     type="n",xlab="Time (t)",ylab="Prevalence (I)",las=1)
+## initial conditions:
+I0 <- 0.001
+S0 <- 1 - I0
+R0 <-  0
+## Set parameter values
+Rknot_vals <- 2.5
+gamma_inv <- 1
+# Solve ode for these parameters and initial conditions
+p <- draw.soln(ic=c(S=S0,I=I0,R=R0), tmax=tmax,
+          func=SIR.vector.field,
+          parms=c(R_0=Rknot_vals,gamma_inv=gamma_inv,lwd=5)
+)
+@
+ \end{itemize}
  \end{proof}
  }
 
 \item \FitSIRc
 
   {\color{blue} \begin{proof}[Solution]
+  Using the code written in part (b) we will make several calls to these functions to plot a series of curves with different $\R_0$ values.
+<< Q3c, fig=TRUE, hieght=4,width=6,fig.show="hold",dev="tikz">>=
+tmax <- 40 # end time for numerical integration of the ODE
+## initial conditions:
+I0 <- 0.001
+S0 <- 1 - I0
+R0 <-  0
+gamma_inv=4
+Rknot_vals <- c(1.2,1.5,1.8,2,3,4)
+## draw box for plot:
+plot(0,0,xlim=c(0,tmax),ylim=c(0,0.5),
+     type="n",xlab="Time (t)",
+     ylab="Prevalence (I)",las=1)
+## draw solution for each value of Rknot:
+for (i in 1:length(Rknot_vals)) {
+  draw.soln(ic=c(S=S0,I=I0,R=R0), tmax=tmax,
+            times=seq(0,tmax,length.out = 500),
+            func=SIR.vector.field,
+            parms=c(R_0=Rknot_vals[i],gamma_inv=gamma_inv),
+            lwd=2, colour=rainbow(length(Rknot_vals)+1)[i] 
+            # use a different line colour for each solution
+            )
+}
+legend("topright",legend=Rknot_vals,
+       col=rainbow(length(Rknot_vals)+1),lwd=2)
+title(paste("SIR curves with varied","$R_0$","Values"))
+@
   {\color{magenta}\dots beautifully clear text and plot(s) here \dots\ preceded by \Rlogo code if this is a \texttt{knitr} script}
   \end{proof}
   }
