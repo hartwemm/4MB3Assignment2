@@ -54,17 +54,19 @@ philadata$date <- as.Date(philadata$date)
 
 \item \PhilaDataReproduceA
 
-  {\color{blue}
+  {\color{blue} \begin{proof}[Solution]
+  We read the data file using the code aboved and created the graph below.
 <<Q1, eval=TRUE, fig=TRUE, fig.show="hold", width = 6, height = 4>>=
 
-plot(philadata, pch=21, col="grey", type="l",bty="L",
-     ann=FALSE,las=1,xaxs="i") ## Plot underlying grey line
-points(philadata, pch=21, bg="red",cex=0.65,lwd=0.45) ## Add red pts
+plot(philadata, pch=21, col="grey", type="l", bty="L",
+     ann=FALSE, las=1, xaxs="i") ## Plot underlying grey line
+points(philadata, pch=21, bg="red", cex=0.65, lwd=0.45) ## Add red pts
 ## Add blue labels
 mtext("Date", side=1, adj=1, line=1.5, font=1, cex=1.5, col='blue')  
 mtext("P&I Deaths", side=2, padj=-7.0, line=-3.2, font=1, 
       las=1, cex=1.5, col='blue')
 @
+  \end{proof}
   }
 
 \PhilaDataReproduceB
@@ -78,21 +80,81 @@ mtext("P&I Deaths", side=2, padj=-7.0, line=-3.2, font=1,
 \item \EstimateRna
 
  {\color{blue} \begin{proof}[Solution]
- {\color{magenta}\dots beautifully clear and concise text to be inserted here\dots}
+ Since we know both $I$ and $M$ are growing exactly exponentially we can write each as an explicit exponential equation. 
+ \begin{gather}
+ {\displaystyle {\begin{aligned}
+ I(t)&=I_0e^{K_{0}t} \\
+ M(t)&=M_0e^{K_{1}t}
+ \end{aligned}}}
+ \end{gather}
+ Now we write $M$ as a function of $t-\tau$:
+ \begin{equation}
+ {\displaystyle {\begin{aligned}
+ M(t-\tau)&=M_0e^{K_{1}(t-\tau)} \\
+ &=\frac{M_0}{e^{K_{1}\tau}}e^{K_{1}t}
+ \end{aligned}}}
+ \end{equation}
+ Next we use the equation given in the question, $I(t) = \eta M(t-\tau)$ and substiute the expressions we found above.
+ \begin{equation}
+ {\displaystyle {\begin{aligned}
+ I(t) &= \eta M(t-\tau) \\
+ I_0e^{K_{0}t} &= \frac{\eta M_0}{e^{K_{1}\tau}}e^{K_{1}t}
+ \end{aligned}}}
+ \end{equation}
+ We know these expressions are equal for all time, and the constants have no time dependance, so we must set these equal. The only time dependance is in the exponentials, so these must also be equal, meaning $K_{1}=K_{0}$.
+ \begin{equation}
+ {\displaystyle {\begin{aligned}
+ I_0&=\frac{\eta M_0}{e^{K_{1}\tau}} \\
+ e^{K_{0}t}=e^{K_{1}t} &\Rightarrow K_{1}=K_{0}
+ \end{aligned}}}
+ \end{equation}
+ Therefore the rates of exponential growth for $I$ and $M$ must be equal.
  \end{proof}
  }
 
 \item \EstimateRnb
 
   {\color{blue} \begin{proof}[Solution]
-  {\color{magenta}\dots beautifully clear text and plot(s) here \dots\ interspersed with \Rlogo code if this is a \texttt{knitr} script}
+  We took the logarithm of the prevalence of the same data used above, and fit a straight line to the linear part of the curve. The code and resulting graph are below.
+<<Q2b, fig=TRUE>>=
+lnPI <- log(philadata$pim)
+# Adjust margins
+par(mar=c(4,4,3,3), mgp=c(1.75,0.5,0))
+# Create plot of logarithm of data
+plot(philadata$date, lnPI, pch=21, bg="red", type="p",
+     xlab="Date in 1918", ylab="ln( Prevalence)",
+     xaxs="i", cex=0.65, lwd=0.45, bty="L")
+#Fit linear model to subset of data
+m1 <- lm(lnPI[23:35]~philadata$date[23:35])
+# Add line to plot
+abline(m1, col="blue", lwd=2)
+text(x = 0,y=5,col="blue",
+     label=paste0("y=",round(m1$coefficients[1],2),"+",
+                  round(m1$coefficients[2],2),"t"))
+print(m1)
+@
   \end{proof}
   }
   
 \item \EstimateRnc
 
   {\color{blue} \begin{proof}[Solution]
-  {\color{magenta}\dots beautifully clear text here \dots\ including some embedded \Rlogo code to estimate $\R_0$ if this is a \texttt{knitr} script}
+  As shown in class, the slope of the logarithm of the prevalence curve is approximately $\beta-\gamma$ initially, as $S\approx 1$, as we derive below.
+  \begin{equation}
+  {\displaystyle {\begin{aligned}
+  \frac{dI}{dt}&=\beta SI-\gamma I \\
+  &=(\beta S-\gamma )I \qquad \text{Assume $S\approx 1$} \\
+  &\approx (\beta - \gamma) I \\
+  \end{aligned}}}
+  \end{equation}
+  Solving this equation we get $I(t)\approx I_{0}e^{(\beta - \gamma)t}$ and we can see the slope of the exponential is $\beta-\gamma$. As measured in part (b) we found the slope of this line to be $0.241$. We need an independent measure of the mean infectious period to estimate $\R_0$ as $\R_0$ is defined as the product of $\frac{1}{\gamma}$ and $\beta$, and we cannot solve for either of these using the linear combination of $\beta$ and $\gamma$ that we found from the slope. If we assume that the mean infectious period, $\frac{1}{\gamma}$, is 4, we can then solve for $\R_0$.
+<<Q2c>>=
+sl=m1$coefficients[2][[1]]
+gam=1/4
+bet=sl+gam
+R0=bet/gam
+print(R0)
+@
   \end{proof}
   }
 
@@ -112,8 +174,8 @@ library("deSolve")
 @       
     \item \FitSIRbii
 <<plot.sine,fig.height=4>>=
-plot.sine <- function( xmin=0, xmax=2*pi ) {
-  x <- seq(xmin,xmax,length=100)
+plot.sine <- function(xmin=0, xmax=2*pi ) {
+  x <- seq(xmin, xmax, length=100)
   plot(x, sin(x), typ="l")
   grid() # add a light grey grid
 }
@@ -122,7 +184,7 @@ plot.sine(xmax=4*pi)
   \item \FitSIRbiiiA
 <<SI.vec.fld>>=
 ## Vector Field for SI model
-SI.vector.field <- function(t, vars, parms=c(beta=2,gamma=1)) {
+SI.vector.field <- function(t, vars, parms=c(beta=2, gamma=1)) {
   with(as.list(c(parms, vars)), {
     dx <- -beta*x*y # dS/dt
     dy <- beta*x*y  # dI/dt
@@ -208,11 +270,15 @@ draw.soln <- function(ic=c(S=0.999,I=0.001,R=0), tmax=1,
 }
 @
 \item Finally we use these two functions to solve the differential equations with our parameters and initial conditions.
-<<Q3b3,fig=TRUE,height=4,width=4>>=
+<<Q3b3,dev="tikz",fig=TRUE,height=3,width=4>>=
 tmax <- 10 # end time for numerical integration of the ODE
+# Adjust margins:
+par(mar=c(3,3,2,2),mgp=c(1.75,0.5,0))
 ## draw box for plot:
-plot(0,0,xlim=c(0,tmax),ylim=c(0,1),
-     type="n",xlab="Time (t)",ylab="Prevalence (I)",las=1)
+plot(0,0,xlim=c(0,tmax),ylim=c(0,0.4),
+     type="n",las=1,
+     xlab="Time (t)",ylab="Prevalence (I) (proportion)",
+     main="SIR Curve")
 ## initial conditions:
 I0 <- 0.001
 S0 <- 1 - I0
@@ -234,7 +300,7 @@ p <- draw.soln(ic=c(S=S0,I=I0,R=R0), tmax=tmax,
 
   {\color{blue} \begin{proof}[Solution]
   Using the code written in part (b) we will make several calls to these functions to plot a series of curves with different $\R_0$ values.
-<< Q3c, fig=TRUE, hieght=4,width=6,fig.show="hold",dev='tikz'>>=
+<< Q3c,dev='tikz',fig=TRUE, height=4,width=6,fig.show="hold">>=
 tmax <- 40 # end time for numerical integration of the ODE
 ## initial conditions:
 I0 <- 0.001
@@ -243,12 +309,14 @@ S0 <- 1 - I0- R0
 # Parameters:
 gamma_inv=4
 Rknot_vals <- c(1.2,1.5,1.8,2,3,4)
+# Adjust margins:
+par(mar=c(3,3,2,2),mgp=c(1.75,0.5,0))
 ## draw box for plot:
 plot(0,0,xlim=c(0,tmax),ylim=c(0,0.5),
      type="n",las=1,
      xlab="Time (t)",
      ylab="Prevalence (I)",
-     main="SIR curves with varied $\\mathcal{R}_0$ Values")
+     main="SIR curves with varied Reproduction Numbers")
 ## draw solution for each value of Rknot:
 for (i in 1:length(Rknot_vals)) {
   draw.soln(ic=c(S=S0,I=I0,R=R0), tmax=tmax,
@@ -259,7 +327,7 @@ for (i in 1:length(Rknot_vals)) {
             # use a different line colour for each solution
             )
 }
-legend("topright",legend=Rknot_vals,title="\\R_0",
+legend("topright",legend=Rknot_vals,title="Basic Reproduction Number",
        col=rainbow(length(Rknot_vals)+1),lwd=2)
 # title(paste("SIR curves with varied","$R_0$","Values"))
 @
@@ -269,7 +337,39 @@ legend("topright",legend=Rknot_vals,title="\\R_0",
 \item \FitSIRd
 
   {\color{blue} \begin{proof}[Solution]
-  {\color{magenta}\dots beautifully clear text and plot(s) here \dots\ interspersed with \Rlogo code if this is a \texttt{knitr} script}
+  When beginning this question we began by fitting the shape of the curve to the data points and then scaling the data points down to fit the curve. From previous questions and intuiton we estimated that the mean infectious period ($\frac{1}{\gamma}$) would be about 4 days, and the basic reproduction number $(\R_0)$ to be about 2. From these points we varied the estimations of the population, $I_0$, $R_0$, and parameters $\frac{1}{\gamma}$ and $\R_0$.\par
+The best estimate we found was with $I_0=8 \cdot 10^{-5}$, $R_0=0.1$, $N=8200$, $\R_0=1.97$ and $\frac{1}{\gamma}=3.5$. With these estimates the error between our curve and the data points (calculated using all integer values of time) is 2529.808.
+<<Q3d, dev="tikz",fig=TRUE>>=
+tmax <- 122 # end time for numerical integration of the ODE
+philadata$t <- seq(1,nrow(philadata))
+y1 <- data.frame(time=philadata$t,y=philadata$pim)
+euc.dist <- function(x1, x2) sqrt(sum((x1 - x2) ^ 2))
+
+I0 <- 0.00008
+R0 <-  0.1
+S0 <- 1 - I0 - R0
+pop <- 8200
+plot(x=philadata$t,y=philadata$pim/pop, 
+     col="grey", "l", ## Plot underlying grey line
+     bty="L",xaxs="i",xlab="Time (t)",
+     ylab="Prevalence (I) (proportion)",
+     main="SIR curve approximating 1918 Philidelphia P&I") 
+points(x=philadata$t,y=philadata$pim/pop, pch=21, 
+       bg="red",cex=0.65,lwd=0.45) ## Add red pts
+Rknot_vals <- 1.97
+gamma_inv <- 3.5
+## Draw the solution on our plot
+y2 <- draw.soln(ic=c(S=S0,I=I0,R=R0), tmax=tmax,
+                times=seq(0,tmax,length.out = 488+1),
+                func=SIR.vector.field,
+                parms=c(R_0=Rknot_vals,gamma_inv=gamma_inv), lwd=2,
+                colour="blue" # use a different line colour for each solution
+)
+# Calculate the error in our approximation
+func <- y2[which(y2$time %in% y1$time),"y"]
+E <- euc.dist(y1[,2],func)
+@
+
   \end{proof}
   }
  
@@ -281,8 +381,8 @@ legend("topright",legend=Rknot_vals,title="\\R_0",
 \pagebreak
   {\color{blue} \begin{proof}[Solution] 
 After analyzing the $1918$ Philidelphia P\&I time series our group gained information about the epidemic from mathematical modeling and simulation of events. Two very important parameters for determining how the diseases were spread are the mean infectious period and the basic reproduction number, but other inferences can be made from mathematical analysis. \par
-  The mean infectious period from trial-and-error calculation with our mathematical model appeared to be 4 days. This means that on average, a person will be infected for 4 days, and during this time they are able to spread the diseases to other individuals. Having this information is critical for preparing for potential future epidemics that may arise, since necessary precautions can be taken while it is known that someone is still infected. \par
-  A second important parameter that was analyzed and found using mathematical modeling from our group was the basic reproduction number. This parameter is the product of the previously mentioned mean infectious period, as well as the transmission rate. During our analysis, our group concluded that the basic reproduction number for the 1918 Philadelphia P\&I time series was 1.97. The importance of knowing this number is very high because this number tells us the average number of secondary cases of the infection caused by a primary case; primary case meaning someone that is already infected. Since we found this number to be above 1 that means that when someone is infected, they are guaranteed to spread it to other individuals, possibly causing an epidemic. Once again, having this information is crucial for preparation for potential future outbreaks of the diseases.\par
+  The mean infectious period from trial-and-error calculation with our mathematical model appeared to be 3.5 days. This means that on average, a person will be infected for 3.5 days, and during this time they are able to spread the diseases to other individuals. Having this information is critical for preparing for potential future epidemics that may arise, since necessary precautions, including isolation and other common tactics to prevent spread of infection, can be taken while it is known that someone is still infective. \par
+  A second important parameter that was analyzed and found using mathematical modeling from our group was the basic reproduction number. This parameter is the product of the previously mentioned mean infectious period, as well as the transmission rate. During our analysis, our group concluded that the basic reproduction number for the 1918 Philadelphia P\&I time series was 1.97. The importance of knowing this number is quite high as it tells us the average number of secondary cases caused by each primary case; primary case meaning someone that is already infected. Since we found this number to be above 1, we know when someone is infected, they are guaranteed to spread it to other individuals and cause an epidemic. Once again, having this information is crucial for preparation for potential future outbreaks of the diseases.\par
   Finally, inference can be made about the overall processes that our model used to accurately predict the data from the P\&I time series. Without going into too much detail, in summary interactions between those that were infected and those that were susceptible were what caused the increase in prevalence of infections. After some time, a maximum proportion of the population was achieved, which is based on the basic reproduction number. After the maximum, those that were infected either recovered or passed away, and the proportion of the total population that was infected approached zero. \par
   If you choose to fund our group full time for a month of research we will be investigating other epidemics of pneumonia and influenza to fit mathematical models that allow us to make predictions about future epidemics. Having information on epidemics from other areas of the world would provide great insight into whether location, culture or a number of other factors affects spread of the disease.
   \end{proof}
